@@ -1,0 +1,90 @@
+
+
+First Class         Second Class                    Cooccurances    1-st Class Only    2-nd Class Only   Chi^2
+**********************************************************************************************************************
+java.util.List		java.util.ArrayList	            6049	        130916	           86323	         18074.31998994778
+java.util.Map		java.util.HashMap	            2867	        64738	           37343	         890.6588199966145
+java.util.List		java.util.Map	                2453	        134512	           65152	         17200.0915732685
+org.slf4j.Logger	org.slf4j.LoggerFactory	        1892	        22902	           22354	         748.8815507368317
+java.util.List		java.io.IOException	            1816	        135149	           92725	         29881.18180500563
+java.io.IOException	java.io.File	                1804	        92737	           40407	         4905.548881614795
+java.util.ArrayList	java.util.Collections	        1767	        90605	           27471	         2291.866958468308
+org.junit.Test	    org.junit.Assert	            1749	        50176	           14520	         60.5861030024546
+org.junit.Test	    org.junit.Before	            1695	        50230	           20249	         47.1296957226644
+java.io.IOException	java.io.InputStream	            1650	        92891	           21183	         1468.0859310743822
+java.util.ArrayList	java.util.Iterator	            1490	        90882	           25589	         2348.9116746120444
+org.junit.Test      org.junit.Assert.assertEquals   1472            50453              15288             1.250036410911871
+java.util.List      java.util.Collections           1443            135522             27795             6049.29342006991
+java.util.ArrayList java.util.Map                   1381            90991              66224             11163.672817626943
+java.util.List      java.util.HashMap               1324            135641             38886             10032.042134350282
+android.view.View   android.os.Bundle               1291            30976              26902             59.420521897448026
+
+First Class                                         Second Class                                                         Cooccurances    1-st Class Only     2-nd Class Only Chi^2 P
+********************************************************************************************************************************************************************************************
+org.herac.tuxguitar.app.view.controller.TGViewContext     org.herac.tuxguitar.app.view.controller.TGOpenViewController   7               0                   0          575240.0
+com.taobao.tddl.dbsync.binlog.LogEvent                    com.taobao.tddl.dbsync.binlog.LogBuffer                        2               0                   0          575240.0
+org.apache.ode.bpel.compiler.api.CompilationMessageBundle org.apache.ode.bpel.compiler.api.CompilationMessage            2               0                   0          575240.0
+com.github.vbauer.jackdaw.annotation.JService             com.github.vbauer.jackdaw.annotation.JBean                     2               0                   0          575240.0
+com.jstun.core.util.UtilityException                      com.jstun.core.util.Utility                                    2               0                   0          575240.0
+org.transitime.utils.ClassInstantiator                    org.transitime.config.StringConfigValue                        2               0                   0          575240.0
+org.jvnet.hyperjaxb3.maven2.ejb.test.RunEjbHyperjaxb3Mojo org.jvnet.hyperjaxb3.maven2.Hyperjaxb3Mojo                     2               0                   0          575240.0
+com.snatik.matches.events.EventObserver                   com.snatik.matches.events.AbstractEvent                        2               0                   0          575240.0
+fi.jumi.simpleunit.SimpleUnit                             fi.jumi.api.RunVia                                             2               0                   0          575240.0
+org.apache.fop.events.EventProducer                       org.apache.fop.events.EventBroadcaster                         2               0                   0          575240.0
+com.iyzipay.ToStringRequestBuilder                        com.iyzipay.Request                                            2               0                   0          575240.0
+
+First Class                                         Second Class                                                                Cooccurances    1-st Class Only     2-nd Class Only Chi^2 P
+********************************************************************************************************************************************************************************************
+org.apache.deltaspike.data.impl.property.Properties org.apache.deltaspike.data.impl.property.MethodProperty                     1               5                   5               0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  io.reactivex.netty.pipeline.PipelineConfigurators                           1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.client.ClientException                                          1               31                  7               0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  io.reactivex.netty.client.RxClient                                          1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.ribbon.transport.netty.http.NettyHttpLoadBalancerErrorHandler   1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.client.config.DefaultClientConfigImpl                           1               31                  28              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.loadbalancer.ILoadBalancer                                      1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.ribbon.transport.netty.http.SSEClient                           1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.loadbalancer.reactive.ExecutionListener                         1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.ribbon.transport.netty.udp.LoadBalancingUdpClient               1               31                  23              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.client.RetryHandler                                             1               31                  28              0.0
+com.netflix.client.DefaultLoadBalancerRetryHandler  com.netflix.utils.ScheduledThreadPoolExectuorWithDynamicSize                1               31                  23              0.0
+
+
+First Class                                         Second Class                                    Cooccurances    1-st Class Only 2-nd Class Only Chi^2
+********************************************************************************************************************************************************************************************
+android.app.Application                             android.test.ApplicationTestCase                242             1267            3               90916.01941230113
+ims.framework.Context                               ims.framework.FormAccessLogic                   278             573             556             62266.237846518394
+ims.vo.LookupInstanceCollection                     ims.framework.cn.data.TreeModel                 254             553             508             60008.1241976121
+ims.vo.LookupInstVo                                 ims.framework.cn.data.TreeModel                 254             590             508             57358.89598067247
+ims.vo.LookupInstVo                                 ims.vo.LookupInstanceCollection                 254             590             553             54136.407481184
+ims.framework.FormName                              ims.framework.FormAccessLogic                   278             798             556             49149.11481296209
+ims.framework.FormName                              ims.framework.Context                           278             798             573             48157.63213841154
+ims.framework.utils.Color                           ims.framework.utils.Image                       253             724             532             47650.53783552667
+java.lang.annotation.RetentionPolicy                java.lang.annotation.ElementType                870             2600            2371            37429.93572169286
+org.jpc.emulator.processor                          org.jpc.emulator.execution                      638             1913            1913            35025.9738469381
+org.jpc.emulator.processor.Processor                org.jpc.emulator.processor.fpu64                636             1909            1908            34986.46019066179
+org.jpc.emulator.execution.decoder                  org.jpc.emulator.processor                      638             1921            1913            34913.0094130854
+org.jpc.emulator.execution.decoder                  org.jpc.emulator.execution                      638             1921            1913            34913.0094130854
+org.jpc.emulator.processor                          org.jpc.emulator.processor.fpu64                636             1915            1908            34901.57210180318
+org.jpc.emulator.execution                          org.jpc.emulator.processor.fpu64                636             1915            1908            34901.57210180318
+org.jpc.emulator.processor                          org.jpc.emulator.processor.Processor            636             1915            1909            34887.42392559414
+org.jpc.emulator.execution                          org.jpc.emulator.processor.Processor            636             1915            1909            34887.42392559414
+org.jpc.emulator.execution.decoder                  org.jpc.emulator.processor.fpu64                636             1923            1908            34789.00731168435
+org.jpc.emulator.execution.decoder                  org.jpc.emulator.processor.Processor            636             1923            1909            34774.903189917946
+java.lang.annotation.Target                         java.lang.annotation.ElementType                894             3103            2347            34153.322858793916
+java.lang.annotation.Retention                      java.lang.annotation.RetentionPolicy            964             3392            2506            33924.24636502754
+java.lang.annotation.Retention                      java.lang.annotation.Target                     1022            3334            2975            32972.03579098281
+ims.framework.cn.data.TreeNode                      ims.framework.cn.data.TreeModel                 254             1285            508             31265.289648890466
+java.lang.annotation.Target                         java.lang.annotation.RetentionPolicy            878             3119            2592            30636.858434854395
+ims.framework.cn.data.TreeNode                      ims.framework.utils.Image                       253             1286            532             30095.2524106755
+
+
+First Class  Second Class                    Cooccurances    1-st Class Only    2-nd Class Only   Chi^2
+**********************************************************************************************************************
+ParsableEnum EnumParse 3 0 0
+GoCardlessApiException ApiErrorResponse 2 0 0 776032.0
+MoneyType JavaBeanTypeImpl 1 0 0 776032.0
+ElkObjectPropertyFilter ElkObjectInverseOfFilter 1 0 0 776032.0
+OpenHeightfield CleanNullRegionBorders 1 0 0 776032.0
+DistributionPoint Asn1SequenceOf 1 0 0 776032.0
+SynchronizedShortShortMap ShortShortHashMap 1 0 0 776032.0
+StringOfBytes ReplacementConstructorPragma 1 0 0 776032.0

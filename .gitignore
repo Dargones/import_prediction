@@ -1,0 +1,7 @@
+data/*
+logs/*
+python/.idea/*
+python/__pycache__/*
+java/.idea/*
+java/out/*
+.ipynb_checkpoints/*
