@@ -59,6 +59,41 @@ class LossLessTripletLoss(_Loss):
         return tt.sum(neg_dist + pos_dist)
 
 
+class CumulativeTripletLoss(_Loss):
+
+    def __init__(self, dim, size_average=None, reduce=None, reduction='mean', e=1e-8):
+        super(CumulativeTripletLoss, self).__init__(size_average, reduce, reduction)
+        self.dim = dim
+        self.e = e
+
+    def forward(self, embeds, mask, src, pos):
+        """
+
+        :param embeds: (BATCH, MAX_NODES, HIDDEN)
+        :param mask:   (BATCH, MAX_NODES)
+        :param src:    (BATCH)
+        :param pos:    (BATCH)
+        :return:
+        """
+        # embeddings corresponding to the source node (BATCH, HIDDEN):
+        src_embeds = tt.gather(embeds, 1, src.view(-1, 1).unsqueeze(2).repeat(1, 1, embeds.shape[2]))
+        # distances between source and other nodes (BATCH, MAX_NODES):
+        all_dist = tt.sum((embeds - src_embeds) ** 2, 2)
+        # distance between source and positive (BATCH, 1):
+        pos_dist = tt.gather(all_dist, 1, pos.view(-1, 1))
+        pos_dist_log = -tt.log(-pos_dist / self.dim + 1 + self.e)
+        # distance between source and all negatives (BATCH, MAX_NODES):
+        neg_dist = all_dist * mask
+        neg_dist_log = -tt.log(-(self.dim - all_dist) / self.dim + 1 + self.e)
+        neg_dist_log = neg_dist_log * mask
+        # Total negative for each batch (BATCH):
+        neg_total = tt.sum(neg_dist_log > 0, 1).type(tt.float64)
+        # result
+        loss = tt.sum(pos_dist_log.view(-1) + tt.sum(neg_dist_log, 1) / neg_total)
+        acc = tt.sum(neg_dist> pos_dist, 1).type(tt.float64)/neg_total
+        return loss, np.asscalar(tt.mean(acc).detach().numpy())
+
+
 def correct_func(anchor, positive, negative):
     pos_dist = tt.sum((anchor - positive) ** 2, 1)
     neg_dist = tt.sum((anchor - negative) ** 2, 1)

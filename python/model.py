@@ -105,7 +105,7 @@ class GGNN(nn.Module):
                 m.weight.data.normal_(0.0, 0.02)
                 m.bias.data.fill_(0)
 
-    def forward(self, prop_state, A, target):
+    def forward(self, prop_state, A):
         """
         XXX: The actual forward propagation call
         :param prop_state:  Created embeddings.        [BATCH, NODES, EMBEDDING_SIZE]
@@ -128,11 +128,4 @@ class GGNN(nn.Module):
 
             prop_state = self.propagator(in_states, out_states, prop_state, A)
 
-        anchor = prop_state.gather(1, target[:, 0, :].view((-1, 1, prop_state.shape[2])))
-        positive = prop_state.gather(1, target[:, 1, :].view((-1, 1, prop_state.shape[2])))
-        negative = prop_state.gather(1, target[:, 2, :].view((-1, 1, prop_state.shape[2])))
-
-        anchor = self.sigma(anchor).view((-1, self.state_dim))
-        positive = self.sigma(positive).view((-1, self.state_dim))
-        negative = self.sigma(negative).view((-1, self.state_dim))
-        return anchor, positive, negative
+        return self.sigma(prop_state)

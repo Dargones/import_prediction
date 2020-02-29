@@ -5,3 +5,6 @@ python/__pycache__/*
 java/.idea/*
 java/out/*
 .ipynb_checkpoints/*
+notebooks/.ipynb_checkpoints/*
+.idea/*
+__pycache__/*

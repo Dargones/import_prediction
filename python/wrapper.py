@@ -6,9 +6,9 @@ import os
 import numpy as np
 import random
 from torch.autograd import Variable
-from utils import LossLessTripletLoss, correct_func
-from data_loader import GraphDataLoader
-from model import GGNN
+from python.utils import CumulativeTripletLoss, correct_func
+from python.data_loader import GraphDataLoader
+from python.model import GGNN
 
 
 class ChemModel(object):
@@ -22,11 +22,11 @@ class ChemModel(object):
 
         self.model = GGNN(hidden_size,
                           annotation_size,
-                          (edge_types if directed else int(edge_types/2)),
+                          edge_types,
                           max_nodes,
                           timesteps)
 
-        self.criterion = LossLessTripletLoss(dim=hidden_size)
+        self.criterion = CumulativeTripletLoss(dim=hidden_size)
         self.metric = correct_func
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         self.clamp_gradient_norm = clamp_gradient_norm
@@ -52,25 +52,24 @@ class ChemModel(object):
 
         total_loss = 0
         step = 0
-        total_samples = 0
-        correct_count = 0
+        accuracy = 0
 
-        for adj_matrix, features, targets in data:
-            print("epoch {} step {}".format(epoch, step), flush=True)
+        for adj_matrix, features, mask, src, pos in data:
             step += 1
 
             features = Variable(features, requires_grad=False)
             adj_matrix = Variable(adj_matrix, requires_grad=False)
-            targets = Variable(targets, requires_grad=False)
-
-            total_samples += targets.shape[0]
+            mask = Variable(mask, requires_grad=False)
+            src = Variable(src, requires_grad=False)
+            pos = Variable(pos, requires_grad=False)
 
             self.optimizer.zero_grad()
             self.model.zero_grad()
-            anchor, positive, negative = self.model(features, adj_matrix, targets)
+            embeddings = self.model(features, adj_matrix)
 
-            loss = self.criterion(anchor, positive, negative)
-            correct_count += self.metric(anchor, positive, negative)
+            loss, acc = self.criterion(embeddings, mask, src, pos)
+            accuracy += acc
+            print("epoch {} step {} acc {}".format(epoch, step, acc), flush=True)
             total_loss += np.asscalar(loss.cpu().data.numpy())
 
             if is_training:
@@ -79,7 +78,7 @@ class ChemModel(object):
                                               self.clamp_gradient_norm)
                 self.optimizer.step()
 
-        print("Acc: ", correct_count/total_samples)
+        print("Acc: ", accuracy/step)
         return total_loss
 
 
@@ -121,10 +120,11 @@ class ChemModel(object):
 
 
 if __name__ == "__main__":
-    loader = GraphDataLoader(directory='data/code/', hidden_size=50, directed=False, max_nodes=250)
-    train_data = loader.load("train.json", batch_size=200, new_targets=True, shuffle=True)
-    val_data = loader.load('valid.json', batch_size=200, new_targets=True, shuffle=False)
-    model = ChemModel(log_dir='logs/',
+    loader = GraphDataLoader(directory='/Volumes/My Passport/import_prediction/data/graphs/code/',
+                             hidden_size=50, directed=False, max_nodes=250)
+    train_data = loader.load("train.json", batch_size=200, shuffle=True, targets="generateOnPass")
+    val_data = loader.load('valid.json', batch_size=200, shuffle=False, targets="generate")
+    model = ChemModel(log_dir='/Volumes/My Passport/import_prediction/logs/',
                       directed=False,
                       hidden_size=loader.hidden_size,
                       annotation_size=loader.annotation_size,
