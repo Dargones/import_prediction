@@ -13,7 +13,7 @@ class GraphDataLoader:
     number of nodes, types of edges, and the size of annotations is consistent across the dataset
     """
 
-    def __init__(self, directory, hidden_size, directed=False, max_nodes=None, edge_types=None, annotation_size=None):
+    def __init__(self, directory, hidden_size, directed=False, max_nodes=None, edge_types=None, annotation_size=None, target_edge_type=1):
         """
         Initialize the GraphDataLoader and set some of the parameters that should be consistent
         across all parts of the dataset
@@ -25,6 +25,7 @@ class GraphDataLoader:
         :param edge_types:      number of different edge-types. Does not include the edges added to
                                 the undirected graph
         :param annotation_size: the size of annotations (initial embedddings) for each node
+        :param target_edge_type:the type of edge that is to be predicted
         """
         self.directory = directory
         self.hidden_size = hidden_size
@@ -32,6 +33,7 @@ class GraphDataLoader:
         self.max_nodes = max_nodes
         self.edge_types = edge_types
         self.annotation_size = annotation_size
+        self.target_edge_type = target_edge_type
 
     def load(self, filename, batch_size, shuffle=False, targets="generateOnPass"):
         """
@@ -40,7 +42,7 @@ class GraphDataLoader:
         :param filename:        name of the .json file with graphs
         :param batch_size:      batch size used to initialize the DataLoader
         :param shuffle:         if True, shuffle the graphs on each pass
-        :param targets:     Can be either "generate", "generateOnPass", or "preset"
+        :param targets:         Can be either "generate", "generateOnPass", or "preset"
                                 "generate": generate targets once and keep them this way (valid)
                                 "generateOnPass": generate new targets each epoch (train)
                                 "preset": use the targets specified in the file
@@ -57,7 +59,8 @@ class GraphDataLoader:
                                 max_nodes=self.max_nodes,
                                 edge_types=self.edge_types,
                                 annotation_size=self.annotation_size,
-                                targets=targets)
+                                targets=targets,
+                                target_edge_type=self.target_edge_type)
         return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=2)
 
     def update_parameters(self, data):
@@ -94,7 +97,7 @@ class GraphDataset(Dataset):
     This class allows converting graphs to their neural-network representations on demand
     """
 
-    def __init__(self, data, hidden_size, directed, max_nodes, edge_types, annotation_size, targets):
+    def __init__(self, data, hidden_size, directed, max_nodes, edge_types, annotation_size, targets, target_edge_type):
         """
         Initialize GraphDataset so that it can be passed to DataLoader
         :param data:            graph data in .json format as loaded from disk
@@ -109,6 +112,7 @@ class GraphDataset(Dataset):
                                 "generate": generate targets once and keep them this way (valid)
                                 "generateOnPass": generate new targets each epoch (train)
                                 "preset": use the targets specified in the file
+        :param target_edge_type:the type of edge that is to be predicted
         """
         self.data = data
         self.hidden_size = hidden_size
@@ -117,6 +121,7 @@ class GraphDataset(Dataset):
         self.edge_types = edge_types
         self.annotation_size = annotation_size
         self.targets = targets
+        self.target_edge_type = target_edge_type
         # if targets are ot be automatically generated, clear whatever is stored as targets now:
         if self.targets != "preset":
             for graph in self.data:
@@ -174,7 +179,8 @@ class GraphDataset(Dataset):
         later during loss function calculation
         :return:
         """
-        src, e_type, dest = edges[random.randint(0, len(edges) - 1)]  # select a random edge
+        valid_edges = [x for x in edges if x[1] == self.target_edge_type]
+        src, e_type, dest = valid_edges[random.randint(0, len(valid_edges) - 1)]
         # a column that for each node specifies whether there is an edge to it from the source node:
         mask = 1 - np.resize(a[:, (e_type - 1) * self.max_nodes + src - 1], self.max_nodes)
         mask[dest - 1] = 0  # remove positive example from the mask

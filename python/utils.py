@@ -91,7 +91,7 @@ class CumulativeTripletLoss(_Loss):
         # result
         loss = tt.sum(pos_dist_log.view(-1) + tt.sum(neg_dist_log, 1) / neg_total)
         acc = tt.sum(neg_dist> pos_dist, 1).type(tt.float64)/neg_total
-        return loss, np.asscalar(tt.mean(acc).detach().numpy())
+        return loss, tt.mean(acc).detach().numpy().item()
 
 
 def correct_func(anchor, positive, negative):

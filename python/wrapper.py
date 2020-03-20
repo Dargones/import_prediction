@@ -120,10 +120,10 @@ class ChemModel(object):
 
 
 if __name__ == "__main__":
-    loader = GraphDataLoader(directory='/Volumes/My Passport/import_prediction/data/graphs/code/',
-                             hidden_size=50, directed=False, max_nodes=250)
-    train_data = loader.load("train.json", batch_size=200, shuffle=True, targets="generateOnPass")
-    val_data = loader.load('valid.json', batch_size=200, shuffle=False, targets="generate")
+    loader = GraphDataLoader(directory='/Volumes/My Passport/import_prediction/data/graphs/codeEdges/',
+                             hidden_size=50, directed=False, max_nodes=250, target_edge_type=1)
+    train_data = loader.load("train.json", batch_size=100, shuffle=True, targets="generateOnPass")
+    val_data = loader.load('valid.json', batch_size=100, shuffle=False, targets="generate")
     model = ChemModel(log_dir='/Volumes/My Passport/import_prediction/logs/',
                       directed=False,
                       hidden_size=loader.hidden_size,
@@ -133,4 +133,4 @@ if __name__ == "__main__":
                       seed=0,
                       timesteps=6,
                       lr=0.001)
-    model.train(epochs=100, patience=3, train_data=train_data, val_data=val_data)
+    model.train(epochs=200, patience=3, train_data=train_data, val_data=val_data)

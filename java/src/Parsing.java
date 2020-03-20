@@ -9,7 +9,7 @@ import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.PrimitiveType;
 import com.github.javaparser.ast.type.WildcardType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import org.apache.commons.math3.stat.inference.ChiSquareTest;
+//import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -35,8 +35,9 @@ public class Parsing {
     }
 
     public static String visitAll(String file) {
-        CompilationUnit tree = JavaParser.parse(file);
-        return visitOne(tree);
+        //CompilationUnit tree = JavaParser.parse(file);
+        //return visitOne(tree);
+        return null;
     }
 
     public static String visitOne(Node node) {
@@ -87,7 +88,7 @@ public class Parsing {
      * A class to perform and store statistics about a chi-square independent test
      */
     private static class TestStats {
-        static ChiSquareTest chi = new ChiSquareTest(); // for performing the test
+        //static ChiSquareTest chi = new ChiSquareTest(); // for performing the test
         double pValue; // the p-value as returned by chi-square test
         String name; // names of both classes compared concatenated
         long cooc, only0, only1; // number of cooccurances,
@@ -101,7 +102,7 @@ public class Parsing {
             this.cooc = cooc;
             long none = total - cooc - only0 - only1;
 
-            this.pValue = chi.chiSquare(new long[][] {{cooc, only0}, {only1, none}});
+            //this.pValue = chi.chiSquare(new long[][] {{cooc, only0}, {only1, none}});
         }
 
         double getpValue() {
