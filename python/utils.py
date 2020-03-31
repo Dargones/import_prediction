@@ -66,7 +66,7 @@ class CumulativeTripletLoss(_Loss):
         self.dim = dim
         self.e = e
 
-    def forward(self, embeds, mask, src, pos):
+    def forward(self, embeds, mask, src, pos, oneNegAcc=True):
         """
 
         :param embeds: (BATCH, MAX_NODES, HIDDEN)

@@ -69,7 +69,8 @@ class ChemModel(object):
 
             loss, acc = self.criterion(embeddings, mask, src, pos)
             accuracy += acc
-            print("epoch {} step {} acc {}".format(epoch, step, acc), flush=True)
+            if step % 10 == 0:
+                print("epoch {} step {} acc {}".format(epoch, step, acc), flush=True)
             total_loss += np.asscalar(loss.cpu().data.numpy())
 
             if is_training:
@@ -112,7 +113,7 @@ class ChemModel(object):
                 print("Stopping training after %i epochs without improvement on "
                       "validation loss." % patience)
                 break
- 
+
 
     def save_model(self, path):
         data_to_save = {"model_weights": self.model.state_dict()}
@@ -120,10 +121,11 @@ class ChemModel(object):
 
 
 if __name__ == "__main__":
-    loader = GraphDataLoader(directory='/Volumes/My Passport/import_prediction/data/graphs/codeEdges/',
-                             hidden_size=50, directed=False, max_nodes=250, target_edge_type=1)
-    train_data = loader.load("train.json", batch_size=100, shuffle=True, targets="generateOnPass")
-    val_data = loader.load('valid.json', batch_size=100, shuffle=False, targets="generate")
+    loader = GraphDataLoader(directory='/Volumes/My Passport/import_prediction/data/graphs/newMethod/',
+                             hidden_size=100, directed=False, max_nodes=300, target_edge_type=1)
+    test_data = loader.load('test.json', batch_size=100, shuffle=False, targets="targets_1")
+    train_data = loader.load("train.json", batch_size=100, shuffle=True, targets="targets_1")
+    val_data = loader.load('valid.json', batch_size=100, shuffle=False, targets="targets_1")
     model = ChemModel(log_dir='/Volumes/My Passport/import_prediction/logs/',
                       directed=False,
                       hidden_size=loader.hidden_size,
@@ -131,6 +133,7 @@ if __name__ == "__main__":
                       edge_types=loader.edge_types,
                       max_nodes=loader.max_nodes,
                       seed=0,
-                      timesteps=6,
+                      timesteps=4,
                       lr=0.001)
-    model.train(epochs=200, patience=3, train_data=train_data, val_data=val_data)
+    model.train(epochs=10, patience=2, train_data=train_data, val_data=val_data)
+    test_loss = model.run_epoch(test_data, 1, False)

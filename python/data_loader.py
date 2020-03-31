@@ -45,7 +45,7 @@ class GraphDataLoader:
         :param targets:         Can be either "generate", "generateOnPass", or "preset"
                                 "generate": generate targets once and keep them this way (valid)
                                 "generateOnPass": generate new targets each epoch (train)
-                                "preset": use the targets specified in the file
+                                some other string that is the key to a target field in the data
         :return: a DataLoader object
         """
         full_path = os.path.join(self.directory, filename) # full path to the file
@@ -111,7 +111,7 @@ class GraphDataset(Dataset):
         :param targets:         Can be either "generate", "generateOnPass", or "preset"
                                 "generate": generate targets once and keep them this way (valid)
                                 "generateOnPass": generate new targets each epoch (train)
-                                "preset": use the targets specified in the file
+                                some other string that is the key to a target field in the data
         :param target_edge_type:the type of edge that is to be predicted
         """
         self.data = data
@@ -123,9 +123,12 @@ class GraphDataset(Dataset):
         self.targets = targets
         self.target_edge_type = target_edge_type
         # if targets are ot be automatically generated, clear whatever is stored as targets now:
-        if self.targets != "preset":
+        if self.targets == "generate" or self.targets == "generateOnPass":
             for graph in self.data:
                 graph['targets'] = None
+        else:
+            for graph in self.data:
+                graph['targets'] = self.read_targets(graph)
 
     def __len__(self):
         """
@@ -154,6 +157,9 @@ class GraphDataset(Dataset):
         if self.targets == "generateOnPass" or (self.targets == "generate" and not graph["targets"]):
             graph["targets"] = self.create_target(graph['edges'], a_matrix)
         src, pos, mask = graph["targets"]
+        a_matrix[pos][(self.target_edge_type - 1) * self.max_nodes + src] = 0
+        if not self.directed:
+            a_matrix[src][(self.target_edge_type - 1 + self.edge_types) * self.max_nodes + pos] = 0
         return tt.FloatTensor(a_matrix), tt.FloatTensor(features), tt.LongTensor(mask), src, pos
 
     def create_adjacency_matrix(self, edges):
@@ -167,10 +173,10 @@ class GraphDataset(Dataset):
             src = edge[0]
             e_type = edge[1]
             dest = edge[2]
-            a[dest - 1][(e_type - 1) * self.max_nodes + src - 1] = 1  # a[target][source]
+            a[dest][(e_type - 1) * self.max_nodes + src] = 1  # a[target][source]
             if self.directed:
                 continue
-            a[src - 1][(e_type - 1 + self.edge_types) * self.max_nodes + dest - 1] = 1
+            a[src][(e_type - 1 + self.edge_types) * self.max_nodes + dest] = 1
         return a
 
     def create_target(self, edges, a):
@@ -180,13 +186,18 @@ class GraphDataset(Dataset):
         :return:
         """
         valid_edges = [x for x in edges if x[1] == self.target_edge_type]
-        src, e_type, dest = valid_edges[random.randint(0, len(valid_edges) - 1)]
+        src, _, dest = valid_edges[random.randint(0, len(valid_edges) - 1)]
         # a column that for each node specifies whether there is an edge to it from the source node:
-        mask = 1 - np.resize(a[:, (e_type - 1) * self.max_nodes + src - 1], self.max_nodes)
-        mask[dest - 1] = 0  # remove positive example from the mask
-        a[dest - 1][(e_type - 1) * self.max_nodes + src - 1] = 0
+        mask = np.ones(self.max_nodes)
+        for e_type in range(self.edge_types):
+            mask *= (1 - np.resize(a[:, e_type * self.max_nodes + src], self.max_nodes))
+        mask[dest] = 0  # remove positive example from the mask - this line in redundant
+        return src, dest, mask
 
-        if not self.directed:
-            a[src - 1][(e_type - 1 + self.edge_types) * self.max_nodes + dest - 1] = 0
-
-        return src - 1, dest - 1, mask
+    def read_targets(self, graph):
+        src = graph[self.targets][0]
+        dest = graph[self.targets][1]
+        mask = np.zeros(self.max_nodes)
+        for node_id in graph[self.targets][2:]:
+            mask[node_id] = 1
+        return src, dest, mask

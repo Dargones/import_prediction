@@ -8,3 +8,4 @@ java/out/*
 notebooks/.ipynb_checkpoints/*
 .idea/*
 __pycache__/*
+java/lib/*
