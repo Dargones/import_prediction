@@ -61,7 +61,7 @@ class GraphDataLoader:
                                 annotation_size=self.annotation_size,
                                 targets=targets,
                                 target_edge_type=self.target_edge_type)
-        return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=2)
+        return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=4)
 
 
     def initialize(self, data, batch_size, shuffle=False, targets="generateOnPass"):
@@ -85,7 +85,7 @@ class GraphDataLoader:
                                 annotation_size=self.annotation_size,
                                 targets=targets,
                                 target_edge_type=self.target_edge_type)
-        return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=2)
+        return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=4)
 
     def update_parameters(self, data):
         """
@@ -121,7 +121,7 @@ class GraphDataset(Dataset):
     This class allows converting graphs to their neural-network representations on demand
     """
 
-    def __init__(self, data, hidden_size, directed, max_nodes, edge_types, annotation_size, targets, target_edge_type, max_targets=4):
+    def __init__(self, data, hidden_size, directed, max_nodes, edge_types, annotation_size, targets, target_edge_type, max_targets=14):
         """
         Initialize GraphDataset so that it can be passed to DataLoader
         :param data:            graph data in .json format as loaded from disk
@@ -207,7 +207,7 @@ class GraphDataset(Dataset):
             matrixes[i + 1] = new_matrix
 
         src = np.full(shape=self.max_targets + 2, fill_value=src)
-        features = np.stack((features for i in range(self.max_targets + 2)), axis=0)
+        features = np.stack(list([features for _ in range(self.max_targets + 2)]), axis=0)
         mask = np.zeros(self.max_targets + 2)
         mask[2:len(options) + 2] = 1
         return matrixes, features, src, mask

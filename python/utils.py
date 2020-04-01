@@ -96,30 +96,24 @@ class CumulativeTripletLoss(_Loss):
 
 class SimilarityLoss(_Loss):
 
-    def __init__(self, margin=0.5, size_average=None, reduce=None, reduction='mean'):
+    def __init__(self, margin=1e-2, size_average=None, reduce=None, reduction='mean'):
         super(SimilarityLoss, self).__init__(size_average, reduce, reduction)
         self.margin = margin
 
     def forward(self, diff, mask):
         """
+        :diff:   # BATCH, OPTIONS
+        :mask:   # BACTH, OPTIONS
         :return:
         """
-        negative_total = tt.sum(diff * mask, dim = 1)
-        negative = negative_total / tt.sum(mask, dim=1)
-        positive = diff[:, 1]
-        loss = positive - negative + self.margin
-
-        positive_repeated = positive.view(-1, 1).repeat((1, diff.shape[1]))
-        acc = tt.sum((positive_repeated < diff * mask).double() *mask, dim=1)/tt.sum(mask, dim=1)
+        # BATCH, OPTIONS
+        positive = diff[:, 1].view(-1, 1).repeat((1, diff.shape[1]))
+        # BATCH, OPTIONS
+        loss = tt.nn.functional.relu(positive - diff + self.margin) * mask
+        loss_additional = tt.nn.functional.relu(self.margin - (positive - diff)**2) * mask
+        # BATCH
+        loss = tt.sum(loss + loss_additional, dim=1)/tt.sum(mask, dim=1)
+        # BATCH
+        acc = tt.sum((positive < diff * mask).double() *mask, dim=1)/tt.sum(mask, dim=1)
 
         return tt.mean(loss), tt.mean(acc)
-
-
-
-
-
-def correct_func(anchor, positive, negative):
-    pos_dist = tt.sum((anchor - positive) ** 2, 1)
-    neg_dist = tt.sum((anchor - negative) ** 2, 1)
-
-    return np.asscalar(tt.sum(pos_dist < neg_dist).detach().numpy())

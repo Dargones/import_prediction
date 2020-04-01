@@ -88,15 +88,10 @@ class GGNN(nn.Module):
         # Propagation Model
         self.propagator = Propagator(self.state_dim, self.n_nodes, self.n_edge_types)
 
-        # Output Model
-        self.graph_rep = nn.Sequential(
-            nn.Linear(self.state_dim + self.annotation_dim, self.state_dim), #self.state_dim + self.annotation_dim
-            nn.Tanh(),
-            nn.Linear(self.state_dim, 1)
-        )
         self.score = nn.Linear(self.n_nodes, 1)
         self.sigma = nn.Sigmoid()
-        self.similarity = nn.Linear(self.state_dim * 2, 1)
+        square_root = int((self.state_dim * 2) ** 0.5)
+        self.similarity = nn.Sequential(nn.Linear(self.state_dim * 2, 1))
         self._initialization()
 
 
@@ -136,12 +131,18 @@ class GGNN(nn.Module):
         return self.sigma(self.forward(prop_state, A))
 
     def forward_src(self, prop_state, A, src, batch_size, option_size):
+        # BATCH X OPTIONS, MAX_NODES, EMBED_SIZE
         embeds = self.forward(prop_state, A)
+        # BATCH, OPTIONS, EMBED_SIZE
         src_embeds = tt.gather(embeds, 1, src.view(-1, 1).unsqueeze(2).repeat(1, 1, embeds.shape[2]))
         src_embeds = src_embeds.view(batch_size, option_size, -1)
+        # BATCH, OPTIONS, EMBED_SIZE
         anchors = src_embeds[:, 0, :].view(batch_size, 1, -1).repeat(1, option_size, 1)
 
+        # BATCH, OPTIONS, 1
         input_layer = tt.cat((src_embeds, anchors), dim=2)
         distances = self.similarity(input_layer)
-        return self.sigma(distances).view(batch_size, option_size)
+        # distances = tt.sum((anchors - src_embeds)**2, dim=2)
+        # BATCH, OPTIONS
+        return distances.view(batch_size, option_size)
 
