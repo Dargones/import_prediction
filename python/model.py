@@ -1,4 +1,4 @@
-import torch
+import torch as tt
 import torch.nn as nn
 
 class AttrProxy(object):
@@ -44,15 +44,15 @@ class Propagator(nn.Module):
         A_in = A[:, :, :self.n_nodes*self.n_edge_types]
         A_out = A[:, :, self.n_nodes*self.n_edge_types:]
 
-        a_in = torch.bmm(A_in, state_in) #batch size x |V| x state dim
-        a_out = torch.bmm(A_out, state_out)
-        a = torch.cat((a_in, a_out, state_cur), 2) #batch size x |V| x 3*state dim
+        a_in = tt.bmm(A_in, state_in) #batch size x |V| x state dim
+        a_out = tt.bmm(A_out, state_out)
+        a = tt.cat((a_in, a_out, state_cur), 2) #batch size x |V| x 3*state dim
 
         r = self.reset_gate(a.view(-1, self.state_dim*3)) #batch size*|V| x state_dim 
         z = self.update_gate(a.view(-1, self.state_dim*3))
         r = r.view(-1, self.n_nodes, self.state_dim)
         z = z.view(-1, self.n_nodes, self.state_dim)
-        joined_input = torch.cat((a_in, a_out, r * state_cur), 2)
+        joined_input = tt.cat((a_in, a_out, r * state_cur), 2)
         h_hat = self.transform(joined_input.view(-1, self.state_dim*3))
         h_hat = h_hat.view(-1, self.n_nodes, self.state_dim)
         output = (1 - z) * state_cur + z * h_hat
@@ -96,6 +96,7 @@ class GGNN(nn.Module):
         )
         self.score = nn.Linear(self.n_nodes, 1)
         self.sigma = nn.Sigmoid()
+        self.similarity = nn.Linear(self.state_dim * 2, 1)
         self._initialization()
 
 
@@ -121,11 +122,26 @@ class GGNN(nn.Module):
             for i in range(self.n_edge_types):
                 in_states.append(self.in_fcs[i](prop_state.view(-1, self.state_dim)))
                 out_states.append(self.out_fcs[i](prop_state.view(-1, self.state_dim)))
-            in_states = torch.stack(in_states).transpose(0, 1).contiguous()
+            in_states = tt.stack(in_states).transpose(0, 1).contiguous()
             in_states = in_states.view(-1, self.n_nodes*self.n_edge_types, self.state_dim)
-            out_states = torch.stack(out_states).transpose(0, 1).contiguous()
+            out_states = tt.stack(out_states).transpose(0, 1).contiguous()
             out_states = out_states.view(-1, self.n_nodes*self.n_edge_types, self.state_dim) # batch size x |V||E| x state dim
 
             prop_state = self.propagator(in_states, out_states, prop_state, A)
 
-        return self.sigma(prop_state)
+        # return self.sigma(prop_state)
+        return prop_state
+
+    def forward_sigma(self, prop_state, A):
+        return self.sigma(self.forward(prop_state, A))
+
+    def forward_src(self, prop_state, A, src, batch_size, option_size):
+        embeds = self.forward(prop_state, A)
+        src_embeds = tt.gather(embeds, 1, src.view(-1, 1).unsqueeze(2).repeat(1, 1, embeds.shape[2]))
+        src_embeds = src_embeds.view(batch_size, option_size, -1)
+        anchors = src_embeds[:, 0, :].view(batch_size, 1, -1).repeat(1, option_size, 1)
+
+        input_layer = tt.cat((src_embeds, anchors), dim=2)
+        distances = self.similarity(input_layer)
+        return self.sigma(distances).view(batch_size, option_size)
+

@@ -5,8 +5,7 @@ import time
 import os
 import numpy as np
 import random
-from torch.autograd import Variable
-from python.utils import CumulativeTripletLoss, correct_func
+from python.utils import CumulativeTripletLoss, SimilarityLoss
 from python.data_loader import GraphDataLoader
 from python.model import GGNN
 
@@ -26,8 +25,7 @@ class ChemModel(object):
                           max_nodes,
                           timesteps)
 
-        self.criterion = CumulativeTripletLoss(dim=hidden_size)
-        self.metric = correct_func
+        self.criterion = SimilarityLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         self.clamp_gradient_norm = clamp_gradient_norm
         random.seed(seed)
@@ -54,20 +52,21 @@ class ChemModel(object):
         step = 0
         accuracy = 0
 
-        for adj_matrix, features, mask, src, pos in data:
+        for adj_matrix, features, src, mask in data:
             step += 1
 
-            features = Variable(features, requires_grad=False)
-            adj_matrix = Variable(adj_matrix, requires_grad=False)
-            mask = Variable(mask, requires_grad=False)
-            src = Variable(src, requires_grad=False)
-            pos = Variable(pos, requires_grad=False)
 
             self.optimizer.zero_grad()
             self.model.zero_grad()
-            embeddings = self.model(features, adj_matrix)
 
-            loss, acc = self.criterion(embeddings, mask, src, pos)
+            batch_size = adj_matrix.shape[0]
+            option_size = adj_matrix.shape[1]
+            adj_matrix = adj_matrix.view(-1, adj_matrix.shape[2], adj_matrix.shape[3]).float()
+            src = src.view(-1).long()
+            features = features.view(-1, features.shape[2], features.shape[3]).float()
+            distances = self.model.forward_src(features, adj_matrix, src, batch_size, option_size)
+
+            loss, acc = self.criterion(distances, mask)
             accuracy += acc
             if step % 10 == 0:
                 print("epoch {} step {} acc {}".format(epoch, step, acc), flush=True)
@@ -122,10 +121,10 @@ class ChemModel(object):
 
 if __name__ == "__main__":
     loader = GraphDataLoader(directory='/Volumes/My Passport/import_prediction/data/graphs/newMethod/',
-                             hidden_size=100, directed=False, max_nodes=300, target_edge_type=1)
-    test_data = loader.load('test.json', batch_size=100, shuffle=False, targets="targets_1")
-    train_data = loader.load("train.json", batch_size=100, shuffle=True, targets="targets_1")
-    val_data = loader.load('valid.json', batch_size=100, shuffle=False, targets="targets_1")
+                             hidden_size=20, directed=False, max_nodes=300, target_edge_type=1)
+    test_data = loader.load('test.json', batch_size=10, shuffle=False, targets="generateOnPass")
+    # train_data = loader.load("train.json", batch_size=100, shuffle=True, targets="targets_1")
+    val_data = loader.load('valid.json', batch_size=10, shuffle=False, targets="targets_1")
     model = ChemModel(log_dir='/Volumes/My Passport/import_prediction/logs/',
                       directed=False,
                       hidden_size=loader.hidden_size,
@@ -135,5 +134,5 @@ if __name__ == "__main__":
                       seed=0,
                       timesteps=4,
                       lr=0.001)
-    model.train(epochs=10, patience=2, train_data=train_data, val_data=val_data)
-    test_loss = model.run_epoch(test_data, 1, False)
+    model.train(epochs=10, patience=2, train_data=test_data, val_data=val_data)
+    test_loss = model.run_epoch(val_data, 1, False)

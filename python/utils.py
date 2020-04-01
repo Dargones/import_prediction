@@ -87,11 +87,35 @@ class CumulativeTripletLoss(_Loss):
         neg_dist_log = -tt.log(-(self.dim - all_dist) / self.dim + 1 + self.e)
         neg_dist_log = neg_dist_log * mask
         # Total negative for each batch (BATCH):
-        neg_total = tt.sum(neg_dist_log > 0, 1).type(tt.float64)
+        neg_total = tt.sum(mask > 0, 1).type(tt.float64)
         # result
-        loss = tt.sum(pos_dist_log.view(-1) + tt.sum(neg_dist_log, 1) / neg_total)
+        loss = tt.sum(pos_dist_log.view(-1) + tt.sum(neg_dist_log, 1).type(tt.float64) / neg_total)
         acc = tt.sum(neg_dist> pos_dist, 1).type(tt.float64)/neg_total
         return loss, tt.mean(acc).detach().numpy().item()
+
+
+class SimilarityLoss(_Loss):
+
+    def __init__(self, margin=0.5, size_average=None, reduce=None, reduction='mean'):
+        super(SimilarityLoss, self).__init__(size_average, reduce, reduction)
+        self.margin = margin
+
+    def forward(self, diff, mask):
+        """
+        :return:
+        """
+        negative_total = tt.sum(diff * mask, dim = 1)
+        negative = negative_total / tt.sum(mask, dim=1)
+        positive = diff[:, 1]
+        loss = positive - negative + self.margin
+
+        positive_repeated = positive.view(-1, 1).repeat((1, diff.shape[1]))
+        acc = tt.sum((positive_repeated < diff * mask).double() *mask, dim=1)/tt.sum(mask, dim=1)
+
+        return tt.mean(loss), tt.mean(acc)
+
+
+
 
 
 def correct_func(anchor, positive, negative):
