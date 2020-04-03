@@ -1,5 +1,6 @@
 import torch as tt
 import torch.nn as nn
+import numpy as np
 
 class AttrProxy(object):
     """
@@ -41,6 +42,12 @@ class Propagator(nn.Module):
         self.state_dim = state_dim
 
     def forward(self, state_in, state_out, state_cur, A): #A = [A_in, A_out]
+
+        # state_cur             BATCH, NODE,        EMBED
+        # state_out, state_in   BATCH, NODE * EDGE, EMBED
+        # A                     BATCH, NODE,        NODE * EDGE * 2
+        # A_in, A_out           BATCH, NODE,        NODE * EDGE
+
         A_in = A[:, :, :self.n_nodes*self.n_edge_types]
         A_out = A[:, :, self.n_nodes*self.n_edge_types:]
 
@@ -114,10 +121,12 @@ class GGNN(nn.Module):
             # print ("PROP STATE SIZE:", prop_state.size()) #batch size x |V| x state dim
             in_states = []
             out_states = []
+
+            # in_fcs[i] -> in_fcs.__getitem__(i) -> self.in_{i}, which is a linear layer state_dim -> state_dim
             for i in range(self.n_edge_types):
-                in_states.append(self.in_fcs[i](prop_state.view(-1, self.state_dim)))
-                out_states.append(self.out_fcs[i](prop_state.view(-1, self.state_dim)))
-            in_states = tt.stack(in_states).transpose(0, 1).contiguous()
+                in_states.append(self.in_fcs[i](prop_state))
+                out_states.append(self.out_fcs[i](prop_state))
+            in_states = tt.stack(in_states).transpose(0, 1).contiguous() # Batch, edge, node, embed
             in_states = in_states.view(-1, self.n_nodes*self.n_edge_types, self.state_dim)
             out_states = tt.stack(out_states).transpose(0, 1).contiguous()
             out_states = out_states.view(-1, self.n_nodes*self.n_edge_types, self.state_dim) # batch size x |V||E| x state dim
@@ -140,9 +149,9 @@ class GGNN(nn.Module):
         anchors = src_embeds[:, 0, :].view(batch_size, 1, -1).repeat(1, option_size, 1)
 
         # BATCH, OPTIONS, 1
-        # input_layer = tt.cat((src_embeds, anchors), dim=2)
-        # distances = self.similarity(input_layer)
-        distances = tt.sum((anchors - src_embeds)**2, dim=2)
+        input_layer = tt.cat((src_embeds, anchors), dim=2)
+        distances = self.similarity(input_layer)
+        # distances = tt.sum((anchors - src_embeds)**2, dim=2)
         # BATCH, OPTIONS
         return distances.view(batch_size, option_size)
 

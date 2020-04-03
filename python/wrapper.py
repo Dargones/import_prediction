@@ -132,6 +132,7 @@ class ChemModel(object):
 
 if __name__ == "__main__":
     DIR = '/home/af9562/'
+    # DIR = '/Volumes/My Passport/'
     loader = GraphDataLoader(directory=DIR+'import_prediction/data/graphs/newMethod/',
                              hidden_size=20, directed=False, max_nodes=300, target_edge_type=1)
     # test_data = loader.load('test.json', batch_size=2, shuffle=False, targets="targets_1")
@@ -144,7 +145,7 @@ if __name__ == "__main__":
                       edge_types=loader.edge_types,
                       max_nodes=loader.max_nodes,
                       seed=0,
-                      timesteps=1,
+                      timesteps=6,
                       lr=0.001)
     model.train(epochs=40, patience=3, train_data=val_data, val_data=None, min_epochs=12)
     # test_loss = model.run_epoch(test_data, 1, False)
