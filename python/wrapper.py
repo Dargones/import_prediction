@@ -10,6 +10,8 @@ from tqdm.auto import tqdm
 from python.data_loader import GraphDataLoader
 from python.model import GGNN
 
+CUDA = False
+
 
 class ChemModel(object):
 
@@ -43,7 +45,8 @@ class ChemModel(object):
         :param is_training:
         :return:
         """
-        self.model.cuda()
+        if CUDA:
+            self.model.cuda()
         if is_training:
             self.model.train()
             print("Epoch %d. Training" % epoch)
@@ -65,10 +68,16 @@ class ChemModel(object):
 
             batch_size = adj_matrix.shape[0]
             option_size = adj_matrix.shape[1]
-            adj_matrix = adj_matrix.view(-1, adj_matrix.shape[2], adj_matrix.shape[3]).float().cuda()
-            src = src.view(-1).long().cuda()
-            features = features.view(-1, features.shape[2], features.shape[3]).float().cuda()
-            mask = mask.cuda()
+            adj_matrix = adj_matrix.view(-1, adj_matrix.shape[2], adj_matrix.shape[3]).float()
+            src = src.view(-1).long()
+            features = features.view(-1, features.shape[2], features.shape[3]).float()
+
+            if CUDA:
+                mask = mask.cuda()
+                features = features.cuda()
+                adj_matrix = adj_matrix.cuda()
+                src = src.cuda()
+
             distances = self.model.forward_src(features, adj_matrix, src, batch_size, option_size)
 
             loss, acc = self.criterion(distances, mask)
@@ -90,7 +99,10 @@ class ChemModel(object):
         best_val_loss, best_val_loss_epoch = float("inf"), 0
         for epoch in range(epochs):
             train_loss = self.run_epoch(train_data, epoch, True)
-            val_loss = self.run_epoch(val_data, epoch, False)
+            if not val_data:
+                val_loss = train_loss
+            else:
+                val_loss = self.run_epoch(val_data, epoch, False)
 
             log_entry = {
                         'epoch': epoch,
@@ -122,9 +134,9 @@ if __name__ == "__main__":
     DIR = '/home/af9562/'
     loader = GraphDataLoader(directory=DIR+'import_prediction/data/graphs/newMethod/',
                              hidden_size=20, directed=False, max_nodes=300, target_edge_type=1)
-    test_data = loader.load('test.json', batch_size=10, shuffle=False, targets="targets_1")
-    train_data = loader.load("train.json", batch_size=10, shuffle=True, targets="generateOnPass")
-    val_data = loader.load('valid.json', batch_size=10, shuffle=False, targets="generate")
+    # test_data = loader.load('test.json', batch_size=2, shuffle=False, targets="targets_1")
+    # train_data = loader.load("train.json", batch_size=10, shuffle=True, targets="generateOnPass")
+    val_data = loader.load('valid.json', batch_size=10, shuffle=False, targets="generateOnPass")
     model = ChemModel(log_dir=DIR+'import_prediction/logs/',
                       directed=False,
                       hidden_size=loader.hidden_size,
@@ -132,8 +144,8 @@ if __name__ == "__main__":
                       edge_types=loader.edge_types,
                       max_nodes=loader.max_nodes,
                       seed=0,
-                      timesteps=4,
+                      timesteps=1,
                       lr=0.001)
-    model.train(epochs=40, patience=3, train_data=train_data, val_data=val_data, min_epochs=12)
-    test_loss = model.run_epoch(test_data, 1, False)
-    print(test_loss)
+    model.train(epochs=40, patience=3, train_data=val_data, val_data=None, min_epochs=12)
+    # test_loss = model.run_epoch(test_data, 1, False)
+    # print(test_loss)

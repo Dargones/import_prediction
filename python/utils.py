@@ -96,7 +96,7 @@ class CumulativeTripletLoss(_Loss):
 
 class SimilarityLoss(_Loss):
 
-    def __init__(self, margin=1e-2, size_average=None, reduce=None, reduction='mean'):
+    def __init__(self, margin=0.5, size_average=None, reduce=None, reduction='mean'):
         super(SimilarityLoss, self).__init__(size_average, reduce, reduction)
         self.margin = margin
 
@@ -110,9 +110,9 @@ class SimilarityLoss(_Loss):
         positive = diff[:, 1].view(-1, 1).repeat((1, diff.shape[1]))
         # BATCH, OPTIONS
         loss = tt.nn.functional.relu(positive - diff + self.margin) * mask
-        loss_additional = tt.nn.functional.relu(self.margin - (positive - diff)**2) * mask
+        # loss_additional = tt.nn.functional.relu(self.margin - (positive - diff)**2) * mask
         # BATCH
-        loss = tt.sum(loss + loss_additional, dim=1)/tt.sum(mask, dim=1)
+        loss = tt.sum(loss, dim=1)/tt.sum(mask, dim=1)
         # BATCH
         acc = tt.sum((positive < diff * mask).double() *mask, dim=1)/tt.sum(mask, dim=1)
 

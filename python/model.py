@@ -140,9 +140,9 @@ class GGNN(nn.Module):
         anchors = src_embeds[:, 0, :].view(batch_size, 1, -1).repeat(1, option_size, 1)
 
         # BATCH, OPTIONS, 1
-        input_layer = tt.cat((src_embeds, anchors), dim=2)
-        distances = self.similarity(input_layer)
-        # distances = tt.sum((anchors - src_embeds)**2, dim=2)
+        # input_layer = tt.cat((src_embeds, anchors), dim=2)
+        # distances = self.similarity(input_layer)
+        distances = tt.sum((anchors - src_embeds)**2, dim=2)
         # BATCH, OPTIONS
         return distances.view(batch_size, option_size)
 

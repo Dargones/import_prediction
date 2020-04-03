@@ -121,7 +121,7 @@ class GraphDataset(Dataset):
     This class allows converting graphs to their neural-network representations on demand
     """
 
-    def __init__(self, data, hidden_size, directed, max_nodes, edge_types, annotation_size, targets, target_edge_type, max_targets=14):
+    def __init__(self, data, hidden_size, directed, max_nodes, edge_types, annotation_size, targets, target_edge_type, max_targets=2):
         """
         Initialize GraphDataset so that it can be passed to DataLoader
         :param data:            graph data in .json format as loaded from disk
@@ -194,6 +194,12 @@ class GraphDataset(Dataset):
 
     def getitem_complex(self, index):
         matrix, features, mask, src, pos = self.getitem_simple(index)
+
+        # ------------EXPERIMENT------------------
+        features = np.zeros(features.shape)
+        features[pos] = 1
+        # ----------------------------------------
+
         options = np.where(mask == 1)[0]
         if len(options) > self.max_targets:
             options = np.random.choice(options, self.max_targets)
