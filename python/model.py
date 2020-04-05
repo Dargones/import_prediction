@@ -1,3 +1,11 @@
+#!/usr/bin/env/python
+# This module contains the GGNN model definition.
+# The code was originally copied from https://github.com/thaonguyen19/gated-graph-neural-network-pytorch
+# However, the original code was faulty in several significant ways. Most importantly, there was a
+# mistake in the way messages were passed along the edges (in what is now compute_embeddings()).
+# These bugs have been changed in the current version. See README.md for more details.
+
+
 import torch as tt
 import torch.nn as nn
 
@@ -95,8 +103,6 @@ class GGNN(nn.Module):
         self.propagator = Propagator(self.state_dim, self.n_nodes, self.n_edge_types)
 
         self.score = nn.Linear(self.n_nodes, 1)
-        self.sigma = nn.Sigmoid()
-        square_root = int((self.state_dim * 2) ** 0.5)
         self.similarity = nn.Sequential(nn.Linear(self.state_dim * 2, 1))
         self._initialization()
 
@@ -107,10 +113,10 @@ class GGNN(nn.Module):
                 m.weight.data.normal_(0.0, 0.02)
                 m.bias.data.fill_(0)
 
-    def forward(self, prop_state, A):
+    def compute_embeddings(self, prop_state, A):
         """
-        XXX: The actual forward propagation call
-        :param prop_state:  Created embeddings.        [BATCH, NODES, EMBEDDING_SIZE]
+        What was the forward call in original code
+        :param prop_state:  Initial node states.       [BATCH, NODES, EMBEDDING_SIZE]
         :param A:           Adjacency matrix.          [BATCH, NODES, NODES * EDGE_TYPES * 2]
         :param A:           [ANCHOR_ID, POS_ID, NEG_ID]
         :return:
@@ -132,15 +138,25 @@ class GGNN(nn.Module):
 
             prop_state = self.propagator(in_states, out_states, prop_state, A)
 
-        # return self.sigma(prop_state)
         return prop_state
 
-    def forward_sigma(self, prop_state, A):
-        return self.sigma(self.forward(prop_state, A))
 
-    def forward_src(self, prop_state, A, src, batch_size, option_size):
+    def forward(self, prop_state, A, src, batch_size, option_size):
+        """
+        Get the computed node embeddings after running the neural network and for each graph,
+        compute teh distance between the scr (i.e. anchor) and every other node. Distance between
+        two embeddings is computed with a single layer neural network as in "Learning to Represent
+        Programs with Graphs". The distances are passed at a later stage
+        :param prop_state:   the original node states
+        :param A:            adjacency matrix
+        :param src:          for each graph the index of the src\anchor node. This is the node to
+                             which the import is made
+        :param batch_size:   batch size
+        :param option_size:
+        :return:
+        """
         # BATCH X OPTIONS, MAX_NODES, EMBED_SIZE
-        embeds = self.forward(prop_state, A)
+        embeds = self.compute_embeddings(prop_state, A)
         # BATCH, OPTIONS, EMBED_SIZE
         src_embeds = tt.gather(embeds, 1, src.view(-1, 1).unsqueeze(2).repeat(1, 1, embeds.shape[2]))
         src_embeds = src_embeds.view(batch_size, option_size, -1)
@@ -150,7 +166,6 @@ class GGNN(nn.Module):
         # BATCH, OPTIONS, 1
         input_layer = tt.cat((src_embeds, anchors), dim=2)
         distances = self.similarity(input_layer)
-        # distances = tt.sum((anchors - src_embeds)**2, dim=2)
         # BATCH, OPTIONS
         return distances.view(batch_size, option_size)
 

@@ -25,3 +25,9 @@ java package naming conventions, etc.
  can be compared to in terms of performance on the input prediction task. These
  include embedding similarity, node degree, shortest path from one node to 
  another in a graph, etc.
+ 
+- GGNNs.ipynb - notebook for running GGNNs. The model definition, loss function,
+and data loader anre all defined in ../python folder. The details of my
+implementation of GGNNs are also located there in the README.md file. 
+The notebook only gives an example of how my GGNN can be run and stores some
+results
