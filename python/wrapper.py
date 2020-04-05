@@ -5,12 +5,12 @@ import time
 import os
 import numpy as np
 import random
-from python.utils import CumulativeTripletLoss, SimilarityLoss
+from python.utils import SimilarityLoss
 from tqdm.auto import tqdm
 from python.data_loader import GraphDataLoader
 from python.model import GGNN
 
-CUDA = False
+CUDA = True
 
 
 class ChemModel(object):
@@ -18,6 +18,7 @@ class ChemModel(object):
     def __init__(self, log_dir="logs/", directed=True, hidden_size=50, annotation_size=10, edge_types=1,
                  max_nodes=300, timesteps=6, lr=0.001, seed=0, clamp_gradient_norm=1.0):
 
+        print(lr, " ", timesteps, " ", hidden_size, " ", edge_types)
         self.run_id = "_".join([time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
         self.log_file = os.path.join(log_dir, "%s_log.csv" % self.run_id)
         self.best_model_file = os.path.join(log_dir, "%s_model_best.pickle" % self.run_id)
@@ -135,9 +136,9 @@ if __name__ == "__main__":
     # DIR = '/Volumes/My Passport/'
     loader = GraphDataLoader(directory=DIR+'import_prediction/data/graphs/newMethod/',
                              hidden_size=20, directed=False, max_nodes=300, target_edge_type=1)
-    # test_data = loader.load('test.json', batch_size=2, shuffle=False, targets="targets_1")
-    # train_data = loader.load("train.json", batch_size=10, shuffle=True, targets="generateOnPass")
-    val_data = loader.load('valid.json', batch_size=10, shuffle=False, targets="generateOnPass")
+    test_data = loader.load('test.json', batch_size=10, shuffle=False, targets="targets_1")
+    train_data = loader.load("train.json", batch_size=10, shuffle=True, targets="generateOnPass")
+    val_data = loader.load('valid.json', batch_size=10, shuffle=False, targets="generate")
     model = ChemModel(log_dir=DIR+'import_prediction/logs/',
                       directed=False,
                       hidden_size=loader.hidden_size,
@@ -146,7 +147,7 @@ if __name__ == "__main__":
                       max_nodes=loader.max_nodes,
                       seed=0,
                       timesteps=6,
-                      lr=0.001)
-    model.train(epochs=40, patience=3, train_data=val_data, val_data=None, min_epochs=12)
-    # test_loss = model.run_epoch(test_data, 1, False)
-    # print(test_loss)
+                      lr=1e-3)
+    model.train(epochs=20, patience=3, train_data=train_data, val_data=val_data, min_epochs=6)
+    test_loss = model.run_epoch(test_data, 1, False)
+    print(test_loss)
