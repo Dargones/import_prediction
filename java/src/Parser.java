@@ -3,6 +3,7 @@ import com.github.javaparser.ast.*;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -10,14 +11,16 @@ import org.json.simple.parser.ParseException;
 
 import java.io.FileWriter;
 import java.io.IOException;
+
 import java.nio.file.Files;
 import java.nio.file.Paths;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 
-public class ParsingForGraphs {
+public class Parser {
 
     public static final String DIR = "/Volumes/My Passport/import_prediction/data/GitHubNewOriginal";
     public static final String PREFIX = "/data0000000000";

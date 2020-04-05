@@ -1,6 +1,5 @@
 import torch as tt
 import torch.nn as nn
-import numpy as np
 
 class AttrProxy(object):
     """

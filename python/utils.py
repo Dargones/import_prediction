@@ -3,7 +3,6 @@
 # This module contains helper classes that are used elsewhere throughout the code
 
 import torch as tt
-import numpy as np
 from torch.nn.modules.loss import _Loss
 import queue
 import threading

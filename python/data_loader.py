@@ -1,7 +1,6 @@
 # A module for loading the graph data from .json files and preparing them for input to GGNNs
 
 import numpy as np
-import torch as tt
 from torch.utils.data import Dataset, DataLoader
 import random
 import os
