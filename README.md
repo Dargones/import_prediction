@@ -1,9 +1,9 @@
 # Java Local Import Prediction with Gated Graph Neural Networks
 
-- [Introduction](#-introduction)
-- [Getting the Data](#-getting-the-data)
-- [Data Preprocessing](#-data-preprocessing)
-- [Running the Code](#-running-the-code)
+- [Introduction](#introduction)
+- [Getting the Data](#getting-the-data)
+- [Data Preprocessing](#data-preprocessing-and-baselines)
+- [Running the Code](#running-the-code)
 
 ## Introduction
 
