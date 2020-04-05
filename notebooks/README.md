@@ -27,7 +27,6 @@ java package naming conventions, etc.
  another in a graph, etc.
  
 - GGNNs.ipynb - notebook for running GGNNs. The model definition, loss function,
-and data loader anre all defined in ../python folder. The details of my
+and data loader are all defined in ../python folder. The details of my
 implementation of GGNNs are also located there in the README.md file. 
-The notebook only gives an example of how my GGNN can be run and stores some
-results
+The notebook gives an example of how my GGNN can be run and what result it can achieve

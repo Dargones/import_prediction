@@ -3,7 +3,7 @@
 - [Introduction](#introduction)
 - [Getting the Data](#getting-the-data)
 - [Data Preprocessing](#data-preprocessing-and-baselines)
-- [Running the Code](#running-the-code)
+- [Running the Code](#running-the-ggnns)
 
 ## Introduction
 
@@ -63,6 +63,10 @@ networkx, sklearn, matplotlib, pandas`
 More information on data preprocessing and baselines used for import prediction
 can be found in the README.md file in the notebooks directory.
 
-## Running the Code
+## Running the GGNNs
 
-
+The detailed desription of the pytorch implementation of GGNNs used for this
+project can be found in the README.md file in the python directory. The same
+directory contains the python modules that define the network structure, the
+loss function, and the way the data loader works. GGNNs.ipynb in the notebook
+directory contains a detailed example

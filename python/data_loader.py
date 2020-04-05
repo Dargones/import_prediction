@@ -49,17 +49,13 @@ class GraphDataset(Dataset):
         """
         return len(self.data)
 
-    def __getitem__(self, index):
-        return self.getitem_complex(index)
-
-    def getitem_simple(self, index):
+    def get_numeric_representation(self, index):
         """
-        Get the data given its index in the dataset.
-        :param index:   the index by which a graph can be identified in the dataset
-        :return:        A tuple of three torch tensors:
-                        The first one is the adjacency matrix,
-                        The second contains node features,
-                        The third contains the targets
+        Given an index of a graph in the dataset, get its numeric representation. This consists
+        of the following:
+        1) adjacency matrix
+        2) matrix of initial node annotations
+        3) src, pos, and mask as returned by create_target() or read_target()
         """
         graph = self.data[index]
         a_matrix = self.create_adjacency_matrix(graph["edges"])  # adjacency matrix
@@ -78,8 +74,14 @@ class GraphDataset(Dataset):
         self.set_matrix(a_matrix, src, pos, self.target_edge_type, 0)
         return a_matrix, features, mask, src, pos
 
-    def getitem_complex(self, index):
-        matrix, features, mask, src, pos = self.getitem_simple(index)
+    def __getitem__(self, index):
+        """
+        For a given repository, return its numeric representation with the target edge removed
+        as well as max_targets more of its numeric representations each of which introduces a
+        single edge to the graph. The network will have to select the graph that introduces the
+        target edge
+        """
+        matrix, features, mask, src, pos = self.get_numeric_representation(index)
 
         options = np.where(mask == 1)[0]
         if len(options) > self.max_targets:
@@ -105,7 +107,7 @@ class GraphDataset(Dataset):
         :param edges: List of all edges in the graph
         :return:
         """
-        a = np.zeros([self.max_nodes, self.max_nodes * self.edge_types * (2 - self.directed)])
+        a = np.zeros([self.max_nodes, self.max_nodes * self.edge_types * 2])
         for edge in edges:
             src = edge[0]
             e_type = edge[1]
@@ -114,13 +116,24 @@ class GraphDataset(Dataset):
         return a
 
     def set_matrix(self, a, src, dest, e_type, value):
+        """
+        Remove or add an edge in the adjacency matrix. Also remove or add the corresponding edge
+        going in the opposite direction
+        :param a:     the adjacency matrix
+        :param src:   the source node
+        :param dest:  the destination node
+        :param e_type:the type of the edge to be removed\added
+        :param value: 1 if the edge is to be added, 0 otehrwise
+        """
         a[dest][(e_type - 1) * self.max_nodes + src] = value
         a[src][(e_type - 1 + self.edge_types) * self.max_nodes + dest] = value
 
     def create_target(self, edges, a, n_nodes):
         """
-        Modify the graph by removing an edge. Return a triplet of node indices that are to be used
-        later during loss function calculation
+        Select a random import edge on a graph. Return the src and destination nodes that this
+        edge connects. Also return a mask that for each node in the graph specifies whether it
+        could have been connected to the src node with an import edge. These are future negatives
+        that the network will have to distinguish from the true destination node.
         :return:
         """
         valid_edges = [x for x in edges if x[1] == self.target_edge_type]
@@ -134,6 +147,10 @@ class GraphDataset(Dataset):
         return src, dest, mask
 
     def read_targets(self, graph):
+        """
+        Read the targets directly from the json file (should be used for testing). Return the
+        targets in the same format that create target does
+        """
         src = graph[self.targets][0]
         dest = graph[self.targets][1]
         mask = np.zeros(self.max_nodes, dtype=np.float)
