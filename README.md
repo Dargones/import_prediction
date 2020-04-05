@@ -3,7 +3,7 @@
 - [Introduction](#introduction)
 - [Getting the Data](#getting-the-data)
 - [Data Preprocessing](#data-preprocessing-and-baselines)
-- [Running the Code](#running-the-ggnns)
+- [Running the GGNNs](#running-the-ggnns)
 
 ## Introduction
 
@@ -37,7 +37,7 @@ solve the variable misuse task (they work on the level of a small piece of code
 and model relationships between variables, while I model relationships between
 files\compilation units in the context of a repository). The initial comparison 
 between the baseline results I was able to achieve by other means 
-(see notebooks/Baselines.ipynb) suggest that GGNNs are well suited for this task.
+(see notebooks/Baselines.ipynb) suggest that GGNNs are well suited for this task. For more details on the way I use GGNNs, see README.md in the python directory.
 
 
 ## Getting the Data
@@ -69,4 +69,4 @@ The detailed desription of the pytorch implementation of GGNNs used for this
 project can be found in the README.md file in the python directory. The same
 directory contains the python modules that define the network structure, the
 loss function, and the way the data loader works. GGNNs.ipynb in the notebook
-directory contains a detailed example
+directory contains an example of how the newtork could be run.
