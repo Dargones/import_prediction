@@ -20,22 +20,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 
+/**
+ * A class that provides functionality for extracting relevant information about imports,
+ * packages, etc. from .json files with Java code downloaded from BigQuery
+ */
 public class Parser {
 
-    public static final String DIR = "/Volumes/My Passport/import_prediction/data/GitHubNewOriginal";
-    public static final String PREFIX = "/data0000000000";
-
     public static void main(String[] args) {
-        for (int i = 1; i < 91; i++) {
-            String ind = String.valueOf(i);
-            if (ind.length() == 1)
-                ind = '0' + ind;
-            System.out.println(ind);
-            processDataset(DIR + PREFIX + ind, DIR + "Parsed" + PREFIX + ind + ".json");
-        }
-        // processDataset(DIR + "/test", DIR + "Parsed" + "/test.json");
+        processDataset(args[0], args[1]); // inputFile, outputFile
     }
 
+    /**
+     * Parse a single .json file and extract from it the relevant information
+     * @param inputFile
+     * @param outputFile
+     */
     public static void processDataset(String inputFile, String outputFile) {
         JSONParser jsonParser = new JSONParser();
         JavaParser javaParser = new JavaParser();
@@ -83,6 +82,11 @@ public class Parser {
         }
     }
 
+    /**
+     * Initializes a json object to write the data extracted from a single Java file to.
+     * @param obj  the object from the original .json file (unparsed)
+     * @return     the object that can be filled with parse information
+     */
     public static JSONObject constructEmpyTable(JSONObject obj) {
         String[] path = obj.get("path").toString().split("/");
         String name = path[path.length -1].split("\\.")[0];
@@ -98,10 +102,17 @@ public class Parser {
         return data;
     }
 
+
+    /**
+     * Use Java Parser to extract relevant information from a single Java file
+     * @param obj         Java file as a json object (one of many in a .json file)
+     * @param javaParser  the Parser object to use
+     * @return
+     */
     public static JSONObject extractImports(JSONObject obj, JavaParser javaParser) {
         JSONObject data = constructEmpyTable(obj);
 
-        if (obj.get("content") == null) {
+        if (obj.get("content") == null) {  // if the file contains no code, do not attempt parsing
             System.out.println("File is empty");
             return data;
         }
@@ -109,7 +120,7 @@ public class Parser {
         try {
             parseResult = javaParser.parse((String) obj.get("content")).getResult();
         } catch (Exception e) {
-            System.out.println("Bad Java parse error");
+            System.out.println("Bad Java parse error"); // if parsing failed, return an empty object
             return data;
         }
         if (!parseResult.isPresent()) {
@@ -117,18 +128,19 @@ public class Parser {
             return data;
         }
 
-        // System.out.println(obj.get("content") + "\n\n\n\n\n\n\n\n\n");
-
         CompilationUnit ast = parseResult.get();
         DataCollector visitor = new DataCollector();
         visitor.visit(ast, data);
         if (data.get("name").toString().equals("")) {
-            //System.out.println("Bad file");
+            // this happens whenever two public non static classes are defined in the same CU
             return constructEmpyTable(obj);
         }
         return data;
     }
 
+    /**
+     * A visitor class that fills a json object with information extracted from teh AST
+     */
     private static class DataCollector extends VoidVisitorAdapter<JSONObject> {
 
         @Override
@@ -142,7 +154,7 @@ public class Parser {
                 ((JSONArray) data.get("classImports")).add(reducedName);
         }
 
-        /*
+        /**
          * Get an identifier like
          * (package.)*Class(.InnerClass)?(.*)?
          * and reduce it to
@@ -155,7 +167,6 @@ public class Parser {
             String[] parts = identifier.split("\\.|<|>");
             int i = 0;
             int offset = 0;
-            //System.out.println(identifier);
             while ((i < parts.length) && ((parts[i].length() == 0)||(!Character.isUpperCase(parts[i].charAt(0))))) {
                 offset += 1 + parts[i].length();
                 i += 1;
@@ -165,6 +176,11 @@ public class Parser {
             return identifier.substring(0, offset + parts[i].length());
         }
 
+        /**
+         * Record a package declaration
+         * @param id   the node in the AST
+         * @param data json object to record the package name to
+         */
         @Override
         public void visit(PackageDeclaration id, JSONObject data) {
             super.visit(id, data);
@@ -172,6 +188,13 @@ public class Parser {
             data.put("package", id.getNameAsString());
         }
 
+        /**
+         * Make sure that the name of the main class\interface in the compilation unit matches
+         * the name of the file. Also record any information about extended\implemented classes or
+         * interfaces
+         * @param id   the node in the AST
+         * @param data json object to record the information to
+         */
         @Override
         public void visit(ClassOrInterfaceDeclaration id, JSONObject data) {
             super.visit(id, data);
@@ -194,6 +217,11 @@ public class Parser {
             }
         }
 
+        /**
+         * Record information about a type reference
+         * @param id   the node in the AST
+         * @param data json object to record the information to
+         */
         @Override
         public void visit(ClassOrInterfaceType id, JSONObject data) {
             super.visit(id, data);

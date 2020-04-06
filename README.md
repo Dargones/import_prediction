@@ -51,8 +51,7 @@ used to select the data.
 
 The raw data can be downloaded from BigQuery via GCS as a set of .json files
 each of which will contain millions of lines of Java code. This code can be 
-parsed by running Parser.java (located in java/src) passing the directory with
-the .json files as a single argument. You will need 
+parsed by running Parser.java (located in java/src) passing the name of one .json file as the first argument and the name of the output file as a second argument. You will need 
 [JavaParser](https://javaparser.org/) to run this code. 
 
 Next, the data goes through a series of preprocessing steps. To replicate them,
