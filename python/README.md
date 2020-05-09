@@ -48,6 +48,4 @@ new embedding for the file under consideration. The import option selected as
  
  - utils.py - currently contains the loss function used to train the network for the import prediction task.
  
- ## GGNN results
- 
- An example of how the network can be run can be found in ../notebooks/GGNNs.ipynb. While I have not completed a hyper-parameter search and might make further changes to the network structure down the road, my GGNNs already outperform the baselines I was able to construct by other means. On the binary import prediction task (when the classifier is given a choice of two imports of which only one is correct), my best SVM baseline has the accuracy of 0.76 compared to GGNN's 0.83.
+ - wrapper.py - an example of how the model could be run

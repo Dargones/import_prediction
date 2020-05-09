@@ -67,5 +67,4 @@ can be found in the README.md file in the notebooks directory.
 The detailed desription of the pytorch implementation of GGNNs used for this
 project can be found in the README.md file in the python directory. The same
 directory contains the python modules that define the network structure, the
-loss function, and the way the data loader works. GGNNs.ipynb in the notebook
-directory contains an example of how the newtork could be run.
+loss function, and the way the data loader works. wrapper.py in the python directory contains an example of how the network could be run.
