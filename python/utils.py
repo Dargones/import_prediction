@@ -12,9 +12,10 @@ class CustomTripletLoss(_Loss):
     resulting loss value is the mean across the negatives
     """
 
-    def __init__(self, margin=0.5, size_average=None, reduce=None, reduction='mean'):
+    def __init__(self, margin=0.5, binary_acc=True, size_average=None, reduce=None, reduction='mean'):
         super(CustomTripletLoss, self).__init__(size_average, reduce, reduction)
         self.margin = margin
+        self.binary_acc = binary_acc
 
     def forward(self, diff, mask):
         """
@@ -28,5 +29,8 @@ class CustomTripletLoss(_Loss):
         positive = diff[:, 1].view(-1, 1).repeat((1, diff.shape[1]))
         loss = tt.nn.functional.relu(positive - diff + self.margin) * mask
         loss = tt.sum(loss, dim=1)/tt.sum(mask, dim=1)
-        acc = tt.sum((positive < diff * mask).double() *mask, dim=1)/tt.sum(mask, dim=1)
-        return tt.mean(loss), tt.mean(acc)
+        if self.binary_acc:
+            acc = tt.sum((positive < diff * mask).double() *mask, dim=1)/tt.sum(mask, dim=1)
+        else:
+            acc = tt.sum((positive < diff * mask).double() *mask, dim=1) == tt.sum(mask, dim=1)
+        return tt.mean(loss), tt.mean(acc.double())

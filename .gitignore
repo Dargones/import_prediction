@@ -9,4 +9,6 @@ notebooks/.ipynb_checkpoints/*
 .idea/*
 __pycache__/*
 java/lib/*
-best.model
+*.model
+models.sh
+runResults/*

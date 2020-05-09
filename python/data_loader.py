@@ -10,7 +10,7 @@ class GraphDataset(Dataset):
     This class allows converting graphs to their neural-network representations on demand
     """
 
-    def __init__(self, data, hidden_size, max_nodes, edge_types, annotation_size, targets, target_edge_type, max_targets=10):
+    def __init__(self, data, hidden_size, max_nodes, edge_types, annotation_size, targets, target_edge_type, max_targets=7):
         """
         Initialize GraphDataset so that it can be passed to DataLoader
         :param data:            graph data in .json format as loaded from disk
@@ -26,7 +26,6 @@ class GraphDataset(Dataset):
         :param max_targets:     Maximum number of possible target options
         :param target_edge_type:the type of edge that is to be predicted
         """
-        self.data = data
         self.hidden_size = hidden_size
         self.max_nodes = max_nodes
         self.edge_types = edge_types
@@ -36,10 +35,15 @@ class GraphDataset(Dataset):
         self.max_targets = max_targets
         # if targets are ot be automatically generated, clear whatever is stored as targets now:
         if self.targets == "generate" or self.targets == "generateOnPass":
+            self.data = data
             for graph in self.data:
                 graph['targets'] = None
         else:
-            for graph in self.data:
+            self.data = []
+            for graph in data:
+                if not graph[self.targets]:
+                    continue
+                self.data.append(graph)
                 graph['targets'] = self.read_targets(graph)
 
     def __len__(self):
@@ -85,7 +89,7 @@ class GraphDataset(Dataset):
 
         options = np.where(mask == 1)[0]
         if len(options) > self.max_targets:
-            options = np.random.choice(options, self.max_targets)
+            options = np.random.choice(options, self.max_targets, replace=False)
 
         matrixes = np.zeros((self.max_targets + 2, matrix.shape[0], matrix.shape[1]))
         matrixes[0] = matrix
