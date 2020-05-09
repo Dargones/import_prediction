@@ -3,7 +3,7 @@
 - [Introduction](#introduction)
 - [Getting the Data](#getting-the-data)
 - [Data Preprocessing](#data-preprocessing-and-baselines)
-- [Running the Code](#running-the-ggnns)
+- [Running the GGNNs](#running-the-ggnns)
 
 ## Introduction
 
@@ -37,7 +37,7 @@ solve the variable misuse task (they work on the level of a small piece of code
 and model relationships between variables, while I model relationships between
 files\compilation units in the context of a repository). The initial comparison 
 between the baseline results I was able to achieve by other means 
-(see notebooks/Baselines.ipynb) suggest that GGNNs are well suited for this task.
+(see notebooks/Baselines.ipynb) suggest that GGNNs are well suited for this task. For more details on the way I use GGNNs, see README.md in the python directory.
 
 
 ## Getting the Data
@@ -51,8 +51,7 @@ used to select the data.
 
 The raw data can be downloaded from BigQuery via GCS as a set of .json files
 each of which will contain millions of lines of Java code. This code can be 
-parsed by running Parser.java (located in java/src) passing the directory with
-the .json files as a single argument. You will need 
+parsed by running Parser.java (located in java/src) passing the name of one .json file as the first argument and the name of the output file as a second argument. You will need 
 [JavaParser](https://javaparser.org/) to run this code. 
 
 Next, the data goes through a series of preprocessing steps. To replicate them,
@@ -69,4 +68,4 @@ The detailed desription of the pytorch implementation of GGNNs used for this
 project can be found in the README.md file in the python directory. The same
 directory contains the python modules that define the network structure, the
 loss function, and the way the data loader works. GGNNs.ipynb in the notebook
-directory contains a detailed example
+directory contains an example of how the newtork could be run.
